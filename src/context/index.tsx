@@ -1,6 +1,6 @@
-import { ReactNode, useEffect } from "react"
+import { ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { State, WagmiProvider, useConnect } from "wagmi"
+import { State, WagmiProvider } from "wagmi"
 import { cookieStorage, createStorage } from "@wagmi/core"
 import { safe } from "wagmi/connectors"
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi"
@@ -89,31 +89,7 @@ export function Web3ModalProvider({
       config={wagmiAdapter.wagmiConfig}
       initialState={initialState}
     >
-      <QueryClientProvider client={queryClient}>
-        {/* <AutoConnectProvider>{children}</AutoConnectProvider> */}
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     </WagmiProvider>
   )
-}
-
-export const isHostSafe =
-  !(typeof window === "undefined") && window?.parent !== window
-
-export function AutoConnectProvider({ children }: { children: ReactNode }) {
-  const { connect, connectors } = useConnect()
-
-  useEffect(() => {
-    if (isHostSafe) {
-      for (const connector of connectors) {
-        if (connector.id === "safe") {
-          console.log("Connecting to Safe Wallet")
-          connect({ connector })
-          break
-        }
-      }
-    }
-  }, [connect, connectors])
-
-  return <>{children}</>
 }
