@@ -1,4 +1,4 @@
-import Web3ModalProvider from "../context"
+import { Web3ModalProvider } from "../context"
 import type { AppProps } from "next/app"
 
 import "../globals.css"

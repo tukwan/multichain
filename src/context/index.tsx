@@ -1,7 +1,8 @@
-import React, { ReactNode } from "react"
+import { ReactNode, useEffect } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { State, WagmiProvider } from "wagmi"
+import { State, WagmiProvider, useConnect } from "wagmi"
 import { cookieStorage, createStorage } from "@wagmi/core"
+import { safe } from "wagmi/connectors"
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi"
 import {
   mainnet,
@@ -17,9 +18,6 @@ import {
   SolflareWalletAdapter,
   PhantomWalletAdapter,
 } from "@solana/wallet-adapter-wallets"
-
-// Safe wallet how?: https://github.com/reown-com/appkit/issues/3134
-// import { safe } from "wagmi/connectors"
 
 const queryClient = new QueryClient()
 
@@ -41,10 +39,17 @@ export const wagmiAdapter = new WagmiAdapter({
   ssr: true,
   projectId,
   networks,
+  connectors: [
+    safe({
+      debug: true,
+      shimDisconnect: false,
+    }),
+  ],
 })
 
 // Bug types: https://github.com/reown-com/appkit/issues/3147
 const solanaWeb3JsAdapter = new SolanaAdapter({
+  // @ts-expect-error bug
   wallets: [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
 })
 
@@ -72,7 +77,7 @@ export const modal = createAppKit({
   },
 })
 
-export default function Web3ModalProvider({
+export function Web3ModalProvider({
   children,
   initialState,
 }: {
@@ -84,7 +89,31 @@ export default function Web3ModalProvider({
       config={wagmiAdapter.wagmiConfig}
       initialState={initialState}
     >
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {/* <AutoConnectProvider>{children}</AutoConnectProvider> */}
+        {children}
+      </QueryClientProvider>
     </WagmiProvider>
   )
+}
+
+export const isHostSafe =
+  !(typeof window === "undefined") && window?.parent !== window
+
+export function AutoConnectProvider({ children }: { children: ReactNode }) {
+  const { connect, connectors } = useConnect()
+
+  useEffect(() => {
+    if (isHostSafe) {
+      for (const connector of connectors) {
+        if (connector.id === "safe") {
+          console.log("Connecting to Safe Wallet")
+          connect({ connector })
+          break
+        }
+      }
+    }
+  }, [connect, connectors])
+
+  return <>{children}</>
 }

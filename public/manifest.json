@@ -1,0 +1,11 @@
+{
+  "name": "Dapp",
+  "description": "Dapp v2",
+  "icons": [
+    {
+      "src": "/myAppIcon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}
